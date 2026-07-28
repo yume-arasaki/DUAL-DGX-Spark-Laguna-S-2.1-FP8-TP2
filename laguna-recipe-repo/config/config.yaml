@@ -1,0 +1,28 @@
+# Laguna-S-2.1-FP8 TP2 — vLLM native config
+# Load with: vllm serve --config config.yaml
+# Snapshot of the WORKING production config, 2026-07-28.
+# NOTE: NCCL env (nccl-env.sh), the parser patch, and a live Ray cluster are ALSO required.
+model: /home/yum-spark-1/models/hf/Laguna-S-2.1-FP8
+served-model-name: laguna-fp8-tp2
+host: 0.0.0.0
+port: 8000
+tensor-parallel-size: 2
+pipeline-parallel-size: 1
+distributed-executor-backend: ray
+disable-custom-all-reduce: true
+async-scheduling: false
+enforce-eager: true              # REQUIRED: CUDA-graph cross-node NCCL all-reduce deadlocks on GB10
+attention-backend: FLASHINFER
+gpu-memory-utilization: 0.85
+max-model-len: 262144
+max-num-seqs: 32
+kv-cache-memory-bytes: 25769803776   # 24 GB -> ~2.04M token KV capacity
+enable-prefix-caching: true
+enable-auto-tool-choice: true
+tool-call-parser: poolside_v1
+reasoning-parser: poolside_v1
+override-generation-config:
+  temperature: 0.7
+  top_p: 0.95
+  top_k: 20
+# NO speculative-config: DFlash/draft_model net-loses on cross-node TP2 (2x slower, ~2 accepted/step)
